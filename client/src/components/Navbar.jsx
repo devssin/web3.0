@@ -12,7 +12,7 @@ const Navbar = () => {
   const navItems = ['Market', 'Exchange', 'Tutorials', 'Wallets'];
   return (
     <nav className="w-full flex md:justify-center justify-between items-center p-4">
-      <div className="md:flex[0.5] flex-initial justify-center items-center">
+      <div className="md:flex-[0.5] flex-initial justify-center items-center">
         <img src={logo} alt="logo " className="w-32 cursor-pointer" />
       </div>
       <ul className="text-white hidden md:flex flex-row items-center justify-between list-none flex-initial">
