@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { ethers } from 'ethers'
 import { contractABI, contractAdress } from '../utils/constants'
 
-export const TransacionContext = React.createContext()
+export const TransactionContext = React.createContext()
 
 const { ethereum } = window
 const getEthereumContract = () => {
@@ -22,9 +22,32 @@ export const TransactionsProvider = ({ children }) => {
   const [formData, setFormData] = useState({addressTo: '', amount:'', keyword:'', message:''})
   const [isLoading, setIsLoading] = useState(false)
   const [transactionCount, setTransactionCount] = useState(localStorage.getItem('transactionCount'))
+  const [transactions, setTransactions] = useState([])
   const handleChange = (e, name) => {
     setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
   };
+  const getAllTransactions = async () => {
+    try {
+      if (!ethereum) return alert('Make sure you installed Metamask extention')
+      const transactionsContract = getEthereumContract();
+      const availableTransactions = await transactionsContract.getAllTransactions()
+      const structredTransactions = availableTransactions.map(transaction => {
+        return {
+          addressTo: transaction.receiver, 
+          adressFrom: transaction.sender,
+          timestamp: new Date(transaction.timestamp.toNumber() * 1000).toLocaleString(),
+          message: transaction.message,
+          keyword: transaction.keyword,
+          amount : parseInt(transaction.amount._hex ) /(10 ** 18) 
+        }
+      })
+      setTransactions(structredTransactions)
+    } catch (error) {
+      console.error(error)
+      throw new Error('No ethereum Objects')
+    }
+  } 
+
   const checkIfWalletIsConnected = async () => {
     try {
       if (!ethereum) return alert('Make sure you installed Metamask extention')
@@ -32,6 +55,7 @@ export const TransactionsProvider = ({ children }) => {
 
       if (accounts.length) {
         setCurrentAccount(accounts[0])
+        getAllTransactions()
       } else {
         console.log('No Accounts Found')
       }
@@ -40,6 +64,19 @@ export const TransactionsProvider = ({ children }) => {
       throw new Error('No ethereum Objects')
     }
   }
+  const checkIfTransactionsExist = async () => {
+    try {
+      const transactionsContract = getEthereumContract()
+      const transactionCount = await transactionsContract.getTransactionCount();
+
+      window.localStorage.setItem('transactionCount',transactionCount);
+      console.log(transactionCount.toNumber())
+    } catch (error) {
+      console.error(error)
+      throw new Error('No ethereum Objects')
+    }
+  }
+
   const connectWallet = async () => {
     try {
       if (!ethereum) return alert('Make sure you installed Metamask extention')
@@ -78,7 +115,7 @@ export const TransactionsProvider = ({ children }) => {
       const transactionsCount = await transactionsContract.getTransactionCount();
 
       setTransactionCount(transactionsCount.toNumber());
-      console.log(transactionsCount)
+      console.log(transactionsCount.toNumber())
     } catch (error) {
       console.error(error)
       throw new Error('No ethereum Objects')
@@ -86,11 +123,12 @@ export const TransactionsProvider = ({ children }) => {
   }
   useEffect(() => {
     checkIfWalletIsConnected()
+    checkIfTransactionsExist()
   }, [])
 
   return (
-    <TransacionContext.Provider value={{ connectWallet, currentAccount,formData, sendTransaction, handleChange}}>
+    <TransactionContext.Provider value={{ isLoading,connectWallet, currentAccount,formData, sendTransaction, handleChange,transactions}}>
       {children}
-    </TransacionContext.Provider>
+    </TransactionContext.Provider>
   )
 }

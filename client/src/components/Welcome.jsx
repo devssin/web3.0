@@ -3,7 +3,8 @@ import { AiFillPlayCircle } from 'react-icons/ai'
 import { SiEthereum } from 'react-icons/si'
 import { BsInfoCircle } from 'react-icons/bs'
 import { Loader } from './'
-import { TransacionContext } from '../context/TransactionsContext'
+import { TransactionContext } from '../context/TransactionsContext'
+import { shortenAdress } from '../utils/shortenAdress'
 const Input = ({ placeholder, name, type, value, handleChange }) => (
   <input
     placeholder={placeholder}
@@ -22,7 +23,8 @@ const Welcome = () => {
     handleChange,
     sendTransaction,
     formData,
-  } = useContext(TransacionContext)
+    isLoading
+  } = useContext(TransactionContext)
 
   const handleSubmit = (e) => {
     const { addressTo, amount, keyword, message } = formData
@@ -73,7 +75,7 @@ const Welcome = () => {
                 <BsInfoCircle fontSize={17} color='#fff' />
               </div>
               <div>
-                <p className='text-white font-light text-sm'>Adress</p>
+                <p className='text-white font-light text-sm'>{shortenAdress(currentAccount)}</p>
                 <p className='text-white font-semibold text-lg mt-1'>
                   Ethereum
                 </p>
@@ -108,7 +110,7 @@ const Welcome = () => {
 
             <div className='h-[1px] w-full bg-gray-400 my-2' />
 
-            {false ? (
+            {isLoading ? (
               <Loader />
             ) : (
               <button
